@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
-
 import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
 import FileSearch from './components/FileSearch'
 import FileList from './components/FileList'
 import BottomBtn from './components/BottomBtn'
+import TabList from './components/TabList'
 import defaultFiles from './utils/defaultFiles';
+import SimpleMDE from "react-simplemde-editor"
 import { v4 as uuidv4 } from 'uuid';
 
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css'
+import "easymde/dist/easymde.min.css"
 
 function App() {
 
@@ -93,8 +95,22 @@ function App() {
             </div>
           </div>
         </div>
-        <div className="col-9 bg-dark right-panel">
-          <h1> this is  right</h1>
+        <div className="col-9  right-panel">
+          <TabList
+              files={defaultFiles}
+              activeId="1"
+              unsaveIds={["1","2"]}
+              onTabClick={id => id}
+              onCloseTab={id => id}
+          />
+          <SimpleMDE
+              key={1}
+              value={defaultFiles[2].body}
+              onChange={(value) => {}}
+              options={{
+                minHeight: '515px',
+              }}
+          />
         </div>
       </div>
     </div>

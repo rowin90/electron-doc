@@ -30,8 +30,8 @@ app.whenReady().then(() => {
 
 app.on('ready', () => {
     let mainWindow = new BrowserWindow({
-        width: 1600,
-        height: 600,
+        width: 1440,
+        height: 768,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation:false
