@@ -14,33 +14,37 @@ const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS]
 
 
 // Or if you can not use ES6 imports
-app.whenReady().then(() => {
-
-    extensions.forEach(extension => {
-        try {
-            installExtension(extension)
-                .then((name) => console.log(`Added Extension:  ${name}`))
-                .catch((err) => console.log('An error occurred: ', err));
-        } catch (e) {
-            console.error(e)
-        }
-    })
-
-});
+// app.whenReady().then(() => {
+//
+//     extensions.forEach(extension => {
+//         try {
+//             installExtension(extension)
+//                 .then((name) => console.log(`Added Extension:  ${name}`))
+//                 .catch((err) => console.log('An error occurred: ', err));
+//         } catch (e) {
+//             console.error(e)
+//         }
+//     })
+//
+// });
 
 app.on('ready', () => {
+    // 加载 remote 模块
+    require('@electron/remote/main').initialize()
+
     let mainWindow = new BrowserWindow({
-        width: 1440,
+        width: 1000,
         height: 768,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation:false
+            contextIsolation:false,
         }
     })
 
     let urlLocation = isDev ? 'http://localhost:3000':'xxx'
     mainWindow.loadURL(urlLocation)
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
+    require("@electron/remote/main").enable(mainWindow.webContents)
 
     // let secondWindow = new BrowserWindow({
     //   width:400,
