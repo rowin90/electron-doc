@@ -1,14 +1,14 @@
 import React, {useState} from 'react'
-import {faPlus, faFileImport} from '@fortawesome/free-solid-svg-icons'
+import {faFileImport, faPlus} from '@fortawesome/free-solid-svg-icons'
 import FileSearch from './components/FileSearch'
 import FileList from './components/FileList'
 import BottomBtn from './components/BottomBtn'
 import TabList from './components/TabList'
-import defaultFiles from './utils/defaultFiles';
 import SimpleMDE from "react-simplemde-editor"
+import useIpcRenderer from './hooks/useIpcRenderer'
 import {v4 as uuidv4} from 'uuid';
 
-import {flattenArr, objToArr, timestampToString} from './utils/helper'
+import {flattenArr, objToArr} from './utils/helper'
 import fileHelper from './utils/fileHelper'
 
 import './App.css';
@@ -21,6 +21,8 @@ const {join, basename, extname, dirname} = window.require('path')
 const remote = window.require('@electron/remote')
 const Store = window.require('electron-store')
 const fileStore = new Store({'name': 'Files Data'})
+const settingsStore = new Store({name: 'Settings'})
+console.log('electron-store 默认配置存储在这里 app.getPath("userData")',remote.app.getPath("userData"));
 
 const saveFilesToStore = (files) => {
     const filesStoreObj = objToArr(files).reduce((result, file) => {
@@ -48,7 +50,7 @@ function App() {
     const [isLoading, setLoading] = useState(false)
 
     const filesArr = objToArr(files)
-    const savedLocation = remote.app.getPath('documents')
+    const savedLocation = settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
     const activeFile = files[activeFileID]
     const openedFiles = openedFileIDs.map(openID => {
         return files[openID]
@@ -160,7 +162,6 @@ function App() {
     }
 
     const importFiles = () => {
-        console.log("-> remote", remote);
         remote.dialog.showOpenDialog({
         title: '选择导入的 Markdown 文件',
         properties: ['openFile', 'multiSelections'],
@@ -199,9 +200,17 @@ function App() {
               }
             }
         })
-
-
     }
+
+    useIpcRenderer({
+        'create-new-file': createNewFile,
+        'import-file': importFiles,
+        'save-edit-file': saveCurrentFile,
+        // 'active-file-uploaded': activeFileUploaded,
+        // 'file-downloaded': activeFileDownloaded,
+        // 'files-uploaded': filesUploaded,
+        'loading-status': (message, status) => { setLoading(status) }
+    })
 
     return (
         <div className="App container-fluid">

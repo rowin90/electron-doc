@@ -1,7 +1,10 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow, ipcMain} = require('electron')
-// const path = require('path')
+const {app, ipcMain,Menu} = require('electron')
+const AppWindow = require('./src/AppWindow')
+const path = require('path')
 const isDev = require('electron-is-dev')
+const menuTemplate = require('./src/menuTemplate')
+let mainWindow, settingsWindow
 
 const {
     default: installExtension,
@@ -14,7 +17,8 @@ const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS]
 
 
 // Or if you can not use ES6 imports
-// app.whenReady().then(() => {
+// app.whenReady().then(() =>import useContextMenu from './src/hooks/useContextMenu';
+//  {
 //
 //     extensions.forEach(extension => {
 //         try {
@@ -29,37 +33,40 @@ const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS]
 // });
 
 app.on('ready', () => {
-    // 加载 remote 模块
-    require('@electron/remote/main').initialize()
-
-    let mainWindow = new BrowserWindow({
+    let mainWindowConfig = {
         width: 1000,
         height: 768,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation:false,
-        }
-    })
+    }
 
-    let urlLocation = isDev ? 'http://localhost:3000':'xxx'
-    mainWindow.loadURL(urlLocation)
+    let urlLocation = isDev ? 'http://localhost:3000':`file://${path.join(__dirname, './index.html')}`
+    mainWindow = new AppWindow(mainWindowConfig, urlLocation)
+    mainWindow.on('closed', () => {
+        mainWindow = null
+    })
     mainWindow.webContents.openDevTools()
+    // 加载 remote 模块
+    require('@electron/remote/main').initialize()
     require("@electron/remote/main").enable(mainWindow.webContents)
 
-    // let secondWindow = new BrowserWindow({
-    //   width:400,
-    //   height:300,
-    //   webPreferences:{
-    //     nodeIntegration:true,
-    //   },
-    //   parent:mainWindow
-    // })
-    // secondWindow.loadFile('index.html')
+    // set useMenu
+    const menu = Menu.buildFromTemplate(menuTemplate)
+    Menu.setApplicationMenu(menu)
 
-    ipcMain.on('message', (event, arg) => {
-        console.log("-> arg", arg);
-        event.reply('reply','hello from main')
+    //  hook up main events 设置窗口
+    ipcMain.on('open-settings-window', () => {
+        const settingsWindowConfig = {
+            width: 500,
+            height: 400,
+            parent: mainWindow
+        }
+        const settingsFileLocation = `file://${path.join(__dirname, './settings/settings.html')}`
+        settingsWindow = new AppWindow(settingsWindowConfig, settingsFileLocation)
+        settingsWindow.removeMenu()
+        settingsWindow.on('closed', () => {
+            settingsWindow = null
+        })
     })
+
 })
 
 // function createWindow () {
