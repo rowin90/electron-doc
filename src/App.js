@@ -19,11 +19,13 @@ import "easymde/dist/easymde.min.css"
 // require node.js modules
 const {join, basename, extname, dirname} = window.require('path')
 const remote = window.require('@electron/remote')
+const { ipcRenderer } = window.require('electron')
+
 const Store = window.require('electron-store')
 const fileStore = new Store({'name': 'Files Data'})
 const settingsStore = new Store({name: 'Settings'})
 console.log('electron-store 默认配置存储在这里 app.getPath("userData")',remote.app.getPath("userData"));
-
+const getAutoSync = () => ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(key => !!settingsStore.get(key))
 const saveFilesToStore = (files) => {
     const filesStoreObj = objToArr(files).reduce((result, file) => {
         const {id, path, title, createdAt, isSynced, updatedAt} = file
@@ -155,9 +157,9 @@ function App() {
         const {path, body, title} = activeFile
         fileHelper.writeFile(path, body).then(() => {
             setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id))
-            // if (getAutoSync()) {
-            //     ipcRenderer.send('upload-file', {key: `${title}.md`, path })
-            // }
+            if (getAutoSync()) {
+                ipcRenderer.send('upload-file', {key: `${title}.md`, path })
+            }
         })
     }
 

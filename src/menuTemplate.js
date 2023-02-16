@@ -3,6 +3,9 @@ const Store = require('electron-store')
 const settingsStore = new Store({ name: 'Settings'})
 
 const qiniuIsConfiged =  ['accessKey', 'secretKey', 'bucketName'].every(key => !!settingsStore.get(key))
+   // console.log(settingsStore.get('accessKey'),11)
+   // console.log(settingsStore.get('secretKey'),22)
+   // console.log(settingsStore.get('bucketName'),33)
 let enableAutoSync = settingsStore.get('enableAutoSync')
 let template = [{
   label: '文件',

@@ -1,10 +1,22 @@
 // Modules to control application life and create native browser window
-const {app, ipcMain,Menu} = require('electron')
+const {app, ipcMain,Menu,dialog} = require('electron')
 const AppWindow = require('./src/AppWindow')
 const path = require('path')
 const isDev = require('electron-is-dev')
 const menuTemplate = require('./src/menuTemplate')
+const QiniuManager = require('./src/utils/QiniuManager')
+const Store = require('electron-store')
+const settingsStore = new Store({ name: 'Settings'})
 let mainWindow, settingsWindow
+
+// 创建七牛云实例
+const createManager = () => {
+    const accessKey = settingsStore.get('accessKey')
+    const secretKey = settingsStore.get('secretKey')
+    const bucketName = settingsStore.get('bucketName')
+    return new QiniuManager(accessKey, secretKey, bucketName)
+}
+
 
 const {
     default: installExtension,
@@ -52,7 +64,7 @@ app.on('ready', () => {
     const menu = Menu.buildFromTemplate(menuTemplate)
     Menu.setApplicationMenu(menu)
 
-    //  hook up main events 设置窗口
+    //  打开设置窗口
     ipcMain.on('open-settings-window', () => {
         const settingsWindowConfig = {
             width: 500,
@@ -65,6 +77,34 @@ app.on('ready', () => {
         settingsWindow.on('closed', () => {
             settingsWindow = null
         })
+    })
+
+    // 监听自动上传文件
+    ipcMain.on('upload-file', (event, data) => {
+        const manager = createManager()
+        manager.uploadFile(data.key, data.path).then(data => {
+            console.log('上传成功', data)
+            mainWindow.webContents.send('active-file-uploaded')
+        }).catch(() => {
+            dialog.showErrorBox('同步失败', '请检查七牛云参数是否正确')
+        })
+    })
+
+    // 修改菜单同步状态的勾选
+    ipcMain.on('config-is-saved', () => {
+        // watch out menu items index for mac and windows
+        let qiniuMenu = process.platform === 'darwin' ? menu.items[3] : menu.items[2]
+        const switchItems = (toggle) => {
+            [1, 2, 3].forEach(number => {
+                qiniuMenu.submenu.items[number].enabled = toggle
+            })
+        }
+        const qiniuIsConfiged =  ['accessKey', 'secretKey', 'bucketName'].every(key => !!settingsStore.get(key))
+        if (qiniuIsConfiged) {
+            switchItems(true)
+        } else {
+            switchItems(false)
+        }
     })
 
 })
