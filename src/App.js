@@ -4,6 +4,7 @@ import FileSearch from './components/FileSearch'
 import FileList from './components/FileList'
 import BottomBtn from './components/BottomBtn'
 import TabList from './components/TabList'
+import Loader from './components/Loader'
 import SimpleMDE from "react-simplemde-editor"
 import useIpcRenderer from './hooks/useIpcRenderer'
 import {v4 as uuidv4} from 'uuid';
@@ -110,11 +111,11 @@ function App() {
     }
     const deleteFile = (id) => {
         if (files[id].isNew) {
-            const {[id]: value, ...afterDelete} = files
+            const { [id]: value, ...afterDelete } = files
             setFiles(afterDelete)
         } else {
             fileHelper.deleteFile(files[id].path).then(() => {
-                const {[id]: value, ...afterDelete} = files
+                const { [id]: value, ...afterDelete } = files
                 setFiles(afterDelete)
                 saveFilesToStore(afterDelete)
                 // close the tab if opened
@@ -261,9 +262,12 @@ function App() {
     })
 
     return (
-        <div className="App container-fluid">
-            <div className="row">
-                <div className="col-3  left-panel">
+        <div className="App container-fluid px-0">
+            { isLoading &&
+                <Loader />
+            }
+            <div className="row no-gutters">
+                <div className="col-3 bg-light left-panel">
                     <FileSearch title="我的云文档" onFileSearch={fileSearch}/>
                     <FileList files={fileListArr}
                               onFileClick={fileClick}
