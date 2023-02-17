@@ -7,6 +7,7 @@ const menuTemplate = require('./src/menuTemplate')
 const QiniuManager = require('./src/utils/QiniuManager')
 const Store = require('electron-store')
 const settingsStore = new Store({ name: 'Settings'})
+const fileStore = new Store({name: 'Files Data'})
 let mainWindow, settingsWindow
 
 // 创建七牛云实例
@@ -77,6 +78,29 @@ app.on('ready', () => {
         settingsWindow.on('closed', () => {
             settingsWindow = null
         })
+    })
+
+    // 下载七牛云文件
+    ipcMain.on('download-file', (event, data) => {
+        const manager = createManager()
+        const filesObj = fileStore.get('files')
+        const { key, path, id } = data
+        manager.getStat(data.key).then((resp) => {
+            const serverUpdatedTime = Math.round(resp.putTime / 10000)
+            const localUpdatedTime = filesObj[id].updatedAt
+            if (serverUpdatedTime > localUpdatedTime || !localUpdatedTime) {
+                manager.downloadFile(key, path).then(() => {
+                    mainWindow.webContents.send('file-downloaded', {status: 'download-success', id})
+                })
+            } else {
+                mainWindow.webContents.send('file-downloaded', {status: 'no-new-file', id})
+            }
+        }, (error) => {
+            if (error.statusCode === 612) {
+                mainWindow.webContents.send('file-downloaded', {status: 'no-file', id})
+            }
+        })
+
     })
 
     // 监听自动上传文件
