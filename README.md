@@ -7,8 +7,9 @@
 2. 相关账密，是保存在electron-store本地，可以启动项目后，点击设置，来更新账密
 
 # electron-builder 打包
-0. npm run pack
-1.  npm i electron-builder -D
+[electron.build](https://www.electron.build/configuration/publish.html)
+0. npm run pack 
+1. npm i electron-builder -D
     ![打包后的结果](http://rqbv29g37.hd-bkt.clouddn.com/electron/electron-build.png)
 - 打包包括
     - 打包 react 界面，npm run build
@@ -59,7 +60,7 @@ module.exports = {
 # 优化打包产物
 ### 反解析打包产物
 1. 打包后，主要的文件，是 app.asar ， asar 是 electron 的一个加密文件，保护源码，可以使用 asar 反解析
-2. npm i asar -g 可以反解析 app.asar 看看打包里面是啥
+2. npm i asar -g 可以反解析 app.asar 看看打包里面
 ```sh
  asar extract ./dist/mac/七牛云文档.app/Contents/Resources/app.asar ./app
 ```
@@ -138,4 +139,79 @@ module.exports = {
       "perMachine": false
     }
   }
+```
+
+# 部署
+1. 托管到github中，需要 github Token
+2. 执行publish，会在github上生成 draft 草稿，再在github上发布
+```js
+{
+     // TOKEN 加在环境变量中,???中自己生成
+     "release": "cross-env GH_TOKEN=??? electron-builder",
+    "prerelease": "npm run build && npm run buildMain",
+}
+```
+
+# electron-updater 自动化更新
+> TODO 本地调试自动更新(未完成)
+1. npm i electron-updater -D
+```js
+
+// main.js
+const { autoUpdater } = require('electron-updater')
+
+const checkUpdate = () => {
+    if(isDev){
+        // 本地调试自动更新，手动指定加载对应的更新配置文件
+        autoUpdater.updateConfigPath = path.join(__dirname,'dev-app-update.yml')
+    }
+    autoUpdater.autoDownload =  false
+    autoUpdater.checkForUpdatesAndNotify()
+
+    autoUpdater.on('error',error =>{
+        dialog.showErrorBox('Error: ',error === null?"unknown":(error.stack))
+    })
+
+    autoUpdater.on('update-available',()=>{
+        dialog.showMessageBox({
+            type:'info',
+            title:'应用有新的版本',
+            message:'发现新版本，是否现在更新',
+            buttons:['是','否'],
+        },(buttonIndex)=>{
+            if(buttonIndex === 0){
+                autoUpdater.downloadUpdate()
+            }
+
+            autoUpdater.on('download-progress', (progressObj) => {
+                let log_message = "Download speed: " + progressObj.bytesPerSecond;
+                log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+                log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+                console.log(log_message);
+            })
+
+            autoUpdater.on('update-downloaded', (info) => {
+                console.log('Update downloaded');
+            })
+        })
+    })
+
+}
+
+
+// 在 ready 时，检查
+app.on('ready', () => {
+    // 检查自动更新
+    checkUpdate()
+    
+    // ...
+})
+```
+- dev-app-update.yml 用于本地测试自动更新
+```js
+# 开发环境，测试自动更新，配置文件
+owner:rowin90
+repo:electron-doc
+provider:github
+
 ```

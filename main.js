@@ -1,6 +1,7 @@
 // Modules to control application life and create native browser window
 const {app, ipcMain,Menu,dialog} = require('electron')
 const AppWindow = require('./src/AppWindow')
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const isDev = require('electron-is-dev')
 const menuTemplate = require('./src/menuTemplate')
@@ -28,6 +29,43 @@ const {
 
 const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS]
 
+const checkUpdate = () => {
+    if(isDev){
+        // 本地调试自动更新，手动指定加载对应的更新配置文件
+        autoUpdater.updateConfigPath = path.join(__dirname,'dev-app-update.yml')
+    }
+    autoUpdater.autoDownload =  false
+    autoUpdater.checkForUpdatesAndNotify()
+
+    autoUpdater.on('error',error =>{
+        dialog.showErrorBox('Error: ',error === null?"unknown":(error.stack))
+    })
+
+    autoUpdater.on('update-available',()=>{
+        dialog.showMessageBox({
+            type:'info',
+            title:'应用有新的版本',
+            message:'发现新版本，是否现在更新',
+            buttons:['是','否'],
+        },(buttonIndex)=>{
+            if(buttonIndex === 0){
+                autoUpdater.downloadUpdate()
+            }
+
+            autoUpdater.on('download-progress', (progressObj) => {
+                let log_message = "Download speed: " + progressObj.bytesPerSecond;
+                log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+                log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+                console.log(log_message);
+            })
+
+            autoUpdater.on('update-downloaded', (info) => {
+                console.log('Update downloaded');
+            })
+        })
+    })
+
+}
 
 // Or if you can not use ES6 imports
 // app.whenReady().then(() =>import useContextMenu from './src/hooks/useContextMenu';
@@ -46,6 +84,9 @@ const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS]
 // });
 
 app.on('ready', () => {
+    // 检查自动更新
+    checkUpdate()
+
     let mainWindowConfig = {
         width: 1000,
         height: 768,
