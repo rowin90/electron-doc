@@ -10,6 +10,10 @@
 
 # production
 /build
+/dist
+
+# 打包 asar 反解析后的命名，仅测试用
+/app
 
 # misc
 .DS_Store
