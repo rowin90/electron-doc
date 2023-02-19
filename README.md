@@ -7,7 +7,7 @@
 2. 相关账密，是保存在electron-store本地，可以启动项目后，点击设置，来更新账密
 
 # electron-builder 打包
-[electron.build](https://www.electron.build/configuration/publish.html)
+- [electron.build](https://www.electron.build/configuration/publish.html)
 0. npm run pack 
 1. npm i electron-builder -D
     ![打包后的结果](http://rqbv29g37.hd-bkt.clouddn.com/electron/electron-build.png)
