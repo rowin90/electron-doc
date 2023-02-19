@@ -56,7 +56,8 @@ app.on('ready', () => {
     mainWindow.on('closed', () => {
         mainWindow = null
     })
-    mainWindow.webContents.openDevTools()
+    // 打开调试工具
+    // mainWindow.webContents.openDevTools()
     // 加载 remote 模块
     require('@electron/remote/main').initialize()
     require("@electron/remote/main").enable(mainWindow.webContents)
@@ -72,8 +73,9 @@ app.on('ready', () => {
             height: 400,
             parent: mainWindow
         }
-        const settingsFileLocation = `file://${path.join(__dirname, './settings/settings.html')}`
+        const settingsFileLocation = isDev? `file://${path.join(__dirname, './settings/settings.html')}`:`file://${path.join(__dirname, '../settings/settings.html')}`
         settingsWindow = new AppWindow(settingsWindowConfig, settingsFileLocation)
+        require("@electron/remote/main").enable(settingsWindow.webContents)
         settingsWindow.removeMenu()
         settingsWindow.on('closed', () => {
             settingsWindow = null

@@ -1,5 +1,6 @@
 # 启动
 1. npm run dev 启动 react 和 electron
+2. npm run onlyEle 开发环境实时监听对应文件，仅重启 electron
 
 # 外部配置
 1. 七牛云的配置接口，封装在 utils/QiniuManager中，如果相关api有变化，请及时更新
