@@ -1,3 +1,33 @@
+# 目录结构
+- react 打包用 cra 自带的 react-scripts
+- electron 代码用单独的 webpack 打包，打包进和 react 文件夹里面
+```sh
+├── assets      // electron 一些静态icon的文件，在pkg中有引用
+├── build      // react 打包后项目
+├── dist       // electron 打包后项目，里面包含安装包
+├── main.js     // electron 主入口
+├── package.json
+├── public
+├── settings    // 设置页面（web端） 一个单独的页面
+├── src        // react项目
+    ├── App.css
+    ├── App.js
+    ├── AppWindow.js
+    ├── components
+    ├── hooks
+    ├── index.css
+    ├── index.js
+    ├── logo.svg
+    ├── menuTemplate.js    // electron 菜单配置文件
+    ├── reportWebVitals.js
+    ├── setupTests.js
+    ├── test
+    └── utils
+
+└── webpack.config.js  // 单独webpack 打包 electron 代码的配置文件
+
+```
+
 # 启动
 1. npm run dev 启动 react 和 electron
 2. npm run onlyEle 开发环境实时监听对应文件，仅重启 electron
